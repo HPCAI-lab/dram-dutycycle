@@ -1,0 +1,11 @@
+{
+  "complete": true,
+  "instructions": 2908378021,
+  "records_total": 809771252,
+  "reads_total": 805364357,
+  "writes_total": 4406895,
+  "modify_ops": 1392,
+  "gemm_calls": 6,
+  "per_call": [{"call": 1, "records": 67174798, "reads": 67109127, "writes": 65671}, {"call": 2, "records": 67174798, "reads": 67109127, "writes": 65671}, {"call": 3, "records": 67174798, "reads": 67109127, "writes": 65671}, {"call": 4, "records": 67174798, "reads": 67109127, "writes": 65671}, {"call": 5, "records": 268697998, "reads": 268435719, "writes": 262279}, {"call": 6, "records": 268501390, "reads": 268435719, "writes": 65671}],
+  "windows": [{"call": 1, "offset": 33537398, "length": 100000, "written": 100000}, {"call": 2, "offset": 33537398, "length": 100000, "written": 100000}, {"call": 3, "offset": 33537398, "length": 100000, "written": 100000}, {"call": 4, "offset": 33537398, "length": 100000, "written": 100000}, {"call": 5, "offset": 134298998, "length": 100000, "written": 100000}, {"call": 6, "offset": 134200694, "length": 100000, "written": 100000}, {"call": 5, "offset": 133848998, "length": 1000000, "written": 1000000}]
+}

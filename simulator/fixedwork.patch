@@ -1,0 +1,302 @@
+diff -ruN a/src/controller.cc b/src/controller.cc
+--- a/src/controller.cc
++++ b/src/controller.cc
+@@ -199,11 +199,13 @@
+     if (write_draining_ == 0 && !is_unified_queue_) {
+         // we basically have a upper and lower threshold for write buffer
+         if ((write_buffer_.size() >= write_buffer_.capacity()) ||
+-            (write_buffer_.size() > 8 && cmd_queue_.QueueEmpty())) {
++            (write_buffer_.size() > 8 && cmd_queue_.QueueEmpty()) ||
++            (flush_ && !write_buffer_.empty() && cmd_queue_.QueueEmpty())) {
+             write_draining_ = write_buffer_.size();
+         }
+     }
+ 
++    bool blocked_by_read = false;  // fixed-work patch
+     std::vector<Transaction> &queue =
+         is_unified_queue_ ? unified_queue_
+                           : write_draining_ > 0 ? write_buffer_ : read_queue_;
+@@ -215,6 +217,7 @@
+                 // Enforce R->W dependency
+                 if (pending_rd_q_.count(it->addr) > 0) {
+                     write_draining_ = 0;
++                    blocked_by_read = true;
+                     break;
+                 }
+                 write_draining_ -= 1;
+@@ -224,6 +227,28 @@
+             break;
+         }
+     }
++    // fixed-work patch: a write blocked by an older read to the same
++    // address used to leave the cycle empty, and the read could never be
++    // scheduled while the drain condition held. Schedule a read instead.
++    if (blocked_by_read) {
++        rw_fallbacks_++;
++        for (auto it = read_queue_.begin(); it != read_queue_.end(); it++) {
++            auto cmd = TransToCommand(*it);
++            if (cmd_queue_.WillAcceptCommand(cmd.Rank(), cmd.Bankgroup(),
++                                             cmd.Bank())) {
++                cmd_queue_.AddCommand(cmd);
++                read_queue_.erase(it);
++                break;
++            }
++        }
++    }
++}
++
++bool Controller::IsIdle() const {  // fixed-work patch
++    return read_queue_.empty() && write_buffer_.empty() &&
++           unified_queue_.empty() && pending_rd_q_.empty() &&
++           pending_wr_q_.empty() && return_queue_.empty() &&
++           cmd_queue_.QueueEmpty();
+ }
+ 
+ void Controller::IssueCommand(const Command &cmd) {
+diff -ruN a/src/controller.h b/src/controller.h
+--- a/src/controller.h
++++ b/src/controller.h
+@@ -31,6 +31,10 @@
+     bool WillAcceptTransaction(uint64_t hex_addr, bool is_write) const;
+     bool AddTransaction(Transaction trans);
+     int QueueUsage() const;
++    // fixed-work patch
++    bool IsIdle() const;
++    void SetFlush(bool flush) { flush_ = flush; }
++    uint64_t RwFallbacks() const { return rw_fallbacks_; }
+     // Stats output
+     void PrintEpochStats();
+     void PrintFinalStats();
+@@ -76,6 +80,8 @@
+ 
+     // transaction queueing
+     int write_draining_;
++    bool flush_ = false;          // fixed-work patch: trace exhausted
++    uint64_t rw_fallbacks_ = 0;   // fixed-work patch: deadlock fix uses
+     void ScheduleTransaction();
+     void IssueCommand(const Command &tmp_cmd);
+     Command TransToCommand(const Transaction &trans);
+diff -ruN a/src/cpu.cc b/src/cpu.cc
+--- a/src/cpu.cc
++++ b/src/cpu.cc
+@@ -1,4 +1,5 @@
+ #include "cpu.h"
++#include <algorithm>
+ 
+ namespace dramsim3 {
+ 
+@@ -71,17 +72,35 @@
+ }
+ 
+ void TraceBasedCPU::ClockTick() {
++    // fixed-work patch: a record is submitted only after a successful read,
++    // so the final record is submitted exactly once (the stock loop resubmitted
++    // the last record after the failed read at end of file).
+     memory_system_.ClockTick();
+-    if (!trace_file_.eof()) {
+-        if (get_next_) {
+-            get_next_ = false;
+-            trace_file_ >> trans_;
++    if (!exhausted_) {
++        if (!have_trans_) {
++            if (trace_file_ >> trans_) {
++                have_trans_ = true;
++            } else {
++                exhausted_ = true;
++                memory_system_.SetFlush(true);  // let the tail of writes drain
++            }
+         }
+-        if (trans_.added_cycle <= clk_) {
+-            get_next_ = memory_system_.WillAcceptTransaction(trans_.addr,
+-                                                             trans_.is_write);
+-            if (get_next_) {
++        if (have_trans_ && trans_.added_cycle <= clk_) {
++            if (memory_system_.WillAcceptTransaction(trans_.addr,
++                                                     trans_.is_write)) {
+                 memory_system_.AddTransaction(trans_.addr, trans_.is_write);
++                if (added_reads_ + added_writes_ == 0)
++                    first_trace_cycle_ = trans_.added_cycle;
++                last_trace_cycle_ = trans_.added_cycle;
++                if (trans_.is_write) {
++                    added_writes_++;
++                } else {
++                    added_reads_++;
++                    read_arrival_[trans_.addr].push_back(trans_.added_cycle);
++                }
++                have_trans_ = false;
++            } else {
++                stall_cycles_++;
+             }
+         }
+     }
+@@ -89,4 +108,52 @@
+     return;
+ }
+ 
++void TraceBasedCPU::ReadCallBack(uint64_t addr) {
++    done_reads_++;
++    auto it = read_arrival_.find(addr);
++    if (it != read_arrival_.end() && !it->second.empty()) {
++        read_lat_arrival_.push_back(clk_ - it->second.front());
++        it->second.pop_front();
++        if (it->second.empty()) read_arrival_.erase(it);
++    }
++}
++
++void TraceBasedCPU::WriteCallBack(uint64_t addr) { done_writes_++; }
++
++bool TraceBasedCPU::Done() const {
++    return exhausted_ && !have_trans_ && memory_system_.IsIdle();
++}
++
++void TraceBasedCPU::PrintCpuStats(const std::string& path) const {
++    std::vector<uint64_t> v(read_lat_arrival_);
++    std::sort(v.begin(), v.end());
++    double sum = 0;
++    for (auto x : v) sum += x;
++    auto pct = [&](double q) -> uint64_t {
++        if (v.empty()) return 0;
++        size_t i = static_cast<size_t>(q * (v.size() - 1) + 0.5);
++        return v[i];
++    };
++    std::ofstream o(path);
++    o << "{\n"
++      << "  \"added_reads\": " << added_reads_ << ",\n"
++      << "  \"added_writes\": " << added_writes_ << ",\n"
++      << "  \"done_reads\": " << done_reads_ << ",\n"
++      << "  \"done_writes\": " << done_writes_ << ",\n"
++      << "  \"trace_exhausted\": " << (exhausted_ ? "true" : "false") << ",\n"
++      << "  \"memory_idle\": " << (memory_system_.IsIdle() ? "true" : "false") << ",\n"
++      << "  \"final_cycle\": " << clk_ << ",\n"
++      << "  \"first_trace_cycle\": " << first_trace_cycle_ << ",\n"
++      << "  \"last_trace_cycle\": " << last_trace_cycle_ << ",\n"
++      << "  \"stall_cycles\": " << stall_cycles_ << ",\n"
++      << "  \"rw_fallbacks\": " << memory_system_.RwFallbacks() << ",\n"
++      << "  \"read_lat_from_arrival_count\": " << v.size() << ",\n"
++      << "  \"read_lat_from_arrival_mean\": " << (v.empty() ? 0.0 : sum / v.size()) << ",\n"
++      << "  \"read_lat_from_arrival_p50\": " << pct(0.50) << ",\n"
++      << "  \"read_lat_from_arrival_p95\": " << pct(0.95) << ",\n"
++      << "  \"read_lat_from_arrival_p99\": " << pct(0.99) << ",\n"
++      << "  \"read_lat_from_arrival_max\": " << (v.empty() ? 0 : v.back()) << "\n"
++      << "}\n";
++}
++
+ }  // namespace dramsim3
+diff -ruN a/src/cpu.h b/src/cpu.h
+--- a/src/cpu.h
++++ b/src/cpu.h
+@@ -5,6 +5,9 @@
+ #include <functional>
+ #include <random>
+ #include <string>
++#include <deque>
++#include <unordered_map>
++#include <vector>
+ #include "memory_system.h"
+ 
+ namespace dramsim3 {
+@@ -18,8 +21,10 @@
+               std::bind(&CPU::WriteCallBack, this, std::placeholders::_1)),
+           clk_(0) {}
+     virtual void ClockTick() = 0;
+-    void ReadCallBack(uint64_t addr) { return; }
+-    void WriteCallBack(uint64_t addr) { return; }
++    virtual void ReadCallBack(uint64_t addr) { return; }
++    virtual void WriteCallBack(uint64_t addr) { return; }
++    virtual bool Done() const { return false; }  // fixed-work patch
++    virtual void PrintCpuStats(const std::string& path) const {}
+     void PrintStats() { memory_system_.PrintStats(); }
+ 
+    protected:
+@@ -60,11 +65,22 @@
+                   const std::string& trace_file);
+     ~TraceBasedCPU() { trace_file_.close(); }
+     void ClockTick() override;
++    void ReadCallBack(uint64_t addr) override;
++    void WriteCallBack(uint64_t addr) override;
++    bool Done() const override;
++    void PrintCpuStats(const std::string& path) const override;
+ 
+    private:
+     std::ifstream trace_file_;
+     Transaction trans_;
+-    bool get_next_ = true;
++    bool have_trans_ = false;   // trans_ holds a valid, unsubmitted record
++    bool exhausted_ = false;    // no more records in the trace
++    uint64_t added_reads_ = 0, added_writes_ = 0;
++    uint64_t done_reads_ = 0, done_writes_ = 0;
++    uint64_t stall_cycles_ = 0; // cycles a due record waited for acceptance
++    uint64_t first_trace_cycle_ = 0, last_trace_cycle_ = 0;
++    std::unordered_map<uint64_t, std::deque<uint64_t>> read_arrival_;
++    std::vector<uint64_t> read_lat_arrival_;
+ };
+ 
+ }  // namespace dramsim3
+diff -ruN a/src/dram_system.h b/src/dram_system.h
+--- a/src/dram_system.h
++++ b/src/dram_system.h
+@@ -33,6 +33,16 @@
+     virtual bool AddTransaction(uint64_t hex_addr, bool is_write) = 0;
+     virtual void ClockTick() = 0;
+     int GetChannel(uint64_t hex_addr) const;
++    // fixed-work patch
++    bool IsIdle() const {
++        for (auto c : ctrls_) if (!c->IsIdle()) return false;
++        return true;
++    }
++    void SetFlush(bool f) { for (auto c : ctrls_) c->SetFlush(f); }
++    uint64_t RwFallbacks() const {
++        uint64_t s = 0; for (auto c : ctrls_) s += c->RwFallbacks();
++        return s;
++    }
+ 
+     std::function<void(uint64_t req_id)> read_callback_, write_callback_;
+     static int total_channels_;
+diff -ruN a/src/main.cc b/src/main.cc
+--- a/src/main.cc
++++ b/src/main.cc
+@@ -21,6 +21,10 @@
+     args::ValueFlag<std::string> stream_arg(
+         parser, "stream_type", "address stream generator - (random), stream",
+         {'s', "stream"}, "");
++    args::Flag fixed_work_arg(parser, "fixed_work",
++                              "Stop when the trace is exhausted and every "
++                              "request has completed (-c becomes a cap)",
++                              {'f', "fixed-work"});
+     args::ValueFlag<std::string> trace_file_arg(
+         parser, "trace",
+         "Trace file, setting this option will ignore -s option",
+@@ -61,10 +65,18 @@
+         }
+     }
+ 
+-    for (uint64_t clk = 0; clk < cycles; clk++) {
++    bool fixed_work = args::get(fixed_work_arg);
++    uint64_t clk = 0;
++    for (; clk < cycles; clk++) {
+         cpu->ClockTick();
++        if (fixed_work && cpu->Done()) { clk++; break; }
++    }
++    if (fixed_work && !cpu->Done()) {
++        std::cerr << "WARNING: cycle cap reached before the fixed work "
++                     "completed" << std::endl;
+     }
+     cpu->PrintStats();
++    cpu->PrintCpuStats(output_dir + "/cpu_stats.json");
+ 
+     delete cpu;
+ 
+diff -ruN a/src/memory_system.h b/src/memory_system.h
+--- a/src/memory_system.h
++++ b/src/memory_system.h
+@@ -29,6 +29,10 @@
+ 
+     bool WillAcceptTransaction(uint64_t hex_addr, bool is_write) const;
+     bool AddTransaction(uint64_t hex_addr, bool is_write);
++    // fixed-work patch
++    bool IsIdle() const { return dram_system_->IsIdle(); }
++    void SetFlush(bool f) { dram_system_->SetFlush(f); }
++    uint64_t RwFallbacks() const { return dram_system_->RwFallbacks(); }
+ 
+    private:
+     // These have to be pointers because Gem5 will try to push this object

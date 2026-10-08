@@ -1,0 +1,19 @@
+{
+  "added_reads": 99902,
+  "added_writes": 98,
+  "done_reads": 99902,
+  "done_writes": 98,
+  "trace_exhausted": true,
+  "memory_idle": true,
+  "final_cycle": 896233,
+  "first_trace_cycle": 0,
+  "last_trace_cycle": 896090,
+  "stall_cycles": 4582,
+  "rw_fallbacks": 0,
+  "read_lat_from_arrival_count": 99902,
+  "read_lat_from_arrival_mean": 81.1742,
+  "read_lat_from_arrival_p50": 48,
+  "read_lat_from_arrival_p95": 357,
+  "read_lat_from_arrival_p99": 647,
+  "read_lat_from_arrival_max": 998
+}

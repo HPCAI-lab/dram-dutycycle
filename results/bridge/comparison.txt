@@ -1,0 +1,14 @@
+quantity                             paper    this trace
+read requests done              38,573,371    38,572,335
+write requests done              1,426,629     1,427,665
+read commands                   38,571,501    38,569,896
+cycles                       2,000,000,000 2,000,000,000
+read row-buffer hit rate %           84.86         84.96
+total energy (1e12 units)             2.49          2.49
+energy shares, percent of total:
+  Activate standby                   70.99         70.97
+  Precharge standby                   6.59          6.62
+  Refresh                            13.71         13.72
+  Read data transfer                  6.91          6.91
+  Write data transfer                 0.22          0.22
+  Activate                            1.58          1.57

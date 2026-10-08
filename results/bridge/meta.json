@@ -1,0 +1,21 @@
+{
+ "source": "first 40,000,050 records of the regenerated trace (tracing/trace_gemm.sh, bridge.pin)",
+ "converter": [
+  "awk",
+  "-f",
+  "conversion/convert_pin_to_dramsim.awk",
+  "-v",
+  "stride=50",
+  "build/traces/bridge.pin"
+ ],
+ "cmd": [
+  "build/bin/dramsim3main",
+  "build/DRAMsim3/configs/DDR4_8Gb_x8_3200.ini",
+  "-c",
+  "2000000000",
+  "-t",
+  "bridge.trace",
+  "-o",
+  "results/bridge"
+ ]
+}

@@ -1,0 +1,29 @@
+{
+ "window": "w1_q",
+ "arrival": "uniform",
+ "stride": 200,
+ "records": 100000,
+ "trace_sha256": "ed8e9a8dcc61e2f9fd7be24d4f1c6dc4232d6262eb8ef22ab2892dd80a56a37a",
+ "sim_sha256": "c67aedd5bfc2b97db6c11594c0177b3dadf3e5e4dc5ae8c62530b384fb6c2443",
+ "cmd": [
+  "build/bin/dramsim3main",
+  "build/DRAMsim3/configs/DDR4_8Gb_x8_3200.ini",
+  "-c",
+  "810000000",
+  "-f",
+  "-t",
+  "trace.txt",
+  "-o",
+  "results/runs/w1_q/uniform/s200"
+ ],
+ "converter": [
+  "awk",
+  "-f",
+  "conversion/convert_pin_to_dramsim.awk",
+  "-v",
+  "stride=200",
+  "data/windows/w1_q.pin"
+ ],
+ "returncode": 0,
+ "stderr_tail": ""
+}

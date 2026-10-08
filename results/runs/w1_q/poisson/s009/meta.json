@@ -1,0 +1,28 @@
+{
+ "window": "w1_q",
+ "arrival": "poisson",
+ "stride": 9,
+ "records": 100000,
+ "trace_sha256": "1a2e45fac5141853167bd005d8e4e9708b52d1f53a867578ac3a334789b7250d",
+ "sim_sha256": "c67aedd5bfc2b97db6c11594c0177b3dadf3e5e4dc5ae8c62530b384fb6c2443",
+ "cmd": [
+  "build/bin/dramsim3main",
+  "build/DRAMsim3/configs/DDR4_8Gb_x8_3200.ini",
+  "-c",
+  "46000000",
+  "-f",
+  "-t",
+  "trace.txt",
+  "-o",
+  "results/runs/w1_q/poisson/s009"
+ ],
+ "converter": [
+  "python3",
+  "conversion/convert_poisson.py",
+  "data/windows/w1_q.pin.gz",
+  "9",
+  "1009"
+ ],
+ "returncode": 0,
+ "stderr_tail": ""
+}

@@ -1,0 +1,4 @@
+{
+  "_comment": "Seed of the exponential-gap converter for window w and stride s is base[w] + s. These are the seeds used for the reported runs; each run's meta.json records its converter command.",
+  "base": {"w1_q": 1000, "w2_k": 2000, "w3_v": 3000, "w4_o": 1000, "w5_ff1": 2000, "w6_ff2": 1000}
+}
