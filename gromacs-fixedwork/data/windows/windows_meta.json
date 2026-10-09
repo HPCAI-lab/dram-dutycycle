@@ -1,0 +1,83 @@
+{
+ "step": 1,
+ "step_records": 1211292238,
+ "windows": {
+  "g1_nb25": {
+   "fid": 365,
+   "function": "_ZN3gmx38nbnxn_kernel_4x4_ElecQSTab_VdwLJ_F_refEPKNS_16NbnxnPairlistCpuEPKNS_16nbnxn_atomdata_tEPK19interaction_const_tPA3_KfPNS_23nbnxn_atomdata_output_tE",
+   "function_records_in_step": 1069304877,
+   "share_of_step": 0.8827802601670762,
+   "position": 0.25,
+   "offset": 267276219,
+   "length": 100000,
+   "reads": 77460,
+   "writes": 22540
+  },
+  "g2_nb50": {
+   "fid": 365,
+   "function": "_ZN3gmx38nbnxn_kernel_4x4_ElecQSTab_VdwLJ_F_refEPKNS_16NbnxnPairlistCpuEPKNS_16nbnxn_atomdata_tEPK19interaction_const_tPA3_KfPNS_23nbnxn_atomdata_output_tE",
+   "function_records_in_step": 1069304877,
+   "share_of_step": 0.8827802601670762,
+   "position": 0.5,
+   "offset": 534602438,
+   "length": 100000,
+   "reads": 77425,
+   "writes": 22575
+  },
+  "g3_nb75": {
+   "fid": 365,
+   "function": "_ZN3gmx38nbnxn_kernel_4x4_ElecQSTab_VdwLJ_F_refEPKNS_16NbnxnPairlistCpuEPKNS_16nbnxn_atomdata_tEPK19interaction_const_tPA3_KfPNS_23nbnxn_atomdata_output_tE",
+   "function_records_in_step": 1069304877,
+   "share_of_step": 0.8827802601670762,
+   "position": 0.75,
+   "offset": 801928657,
+   "length": 100000,
+   "reads": 77306,
+   "writes": 22694
+  },
+  "g4_spread": {
+   "fid": 3892,
+   "function": "_Z14spread_on_gridPK9gmx_pme_tP11PmeAtomCommP14PmeAndFftGridsbbb",
+   "function_records_in_step": 31974697,
+   "share_of_step": 0.026397178151487503,
+   "position": 0.5,
+   "offset": 15937348,
+   "length": 100000,
+   "reads": 72152,
+   "writes": 27848
+  },
+  "g5_fft": {
+   "fid": 3918,
+   "function": "_Z14fftpack_cfftf1iPfS_PKfPKii",
+   "function_records_in_step": 30189120,
+   "share_of_step": 0.02492306897784315,
+   "position": 0.5,
+   "offset": 15044560,
+   "length": 100000,
+   "reads": 69402,
+   "writes": 30598
+  },
+  "g6_gather": {
+   "fid": 3857,
+   "function": "_Z17gather_f_bsplinesPK9gmx_pme_tN3gmx8ArrayRefIKfEEbPK11PmeAtomCommPK12splinedata_tf",
+   "function_records_in_step": 22362636,
+   "share_of_step": 0.01846180079294787,
+   "position": 0.5,
+   "offset": 11131318,
+   "length": 100000,
+   "reads": 90644,
+   "writes": 9356
+  },
+  "g2_nb50_1M": {
+   "fid": 365,
+   "function": "_ZN3gmx38nbnxn_kernel_4x4_ElecQSTab_VdwLJ_F_refEPKNS_16NbnxnPairlistCpuEPKNS_16nbnxn_atomdata_tEPK19interaction_const_tPA3_KfPNS_23nbnxn_atomdata_output_tE",
+   "function_records_in_step": 1069304877,
+   "share_of_step": 0.8827802601670762,
+   "position": 0.5,
+   "offset": 534152438,
+   "length": 1000000,
+   "reads": 773771,
+   "writes": 226229
+  }
+ }
+}

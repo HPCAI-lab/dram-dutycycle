@@ -1,0 +1,4 @@
+{
+  "_comment": "GROMACS sweep. Seed of the exponential-gap converter for window w and stride s is base[w] + s. Bases are distinct from the GEMM-AI sweep's.",
+  "base": {"g1_nb25": 11000, "g2_nb50": 12000, "g3_nb75": 13000, "g4_spread": 14000, "g5_fft": 15000, "g6_gather": 16000}
+}

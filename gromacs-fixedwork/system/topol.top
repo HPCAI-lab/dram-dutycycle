@@ -1,0 +1,9 @@
+; 32,000 SPC water molecules (96,000 atoms), OPLS-AA water parameters
+#include "oplsaa.ff/forcefield.itp"
+#include "oplsaa.ff/spc.itp"
+
+[ system ]
+SPC water, 96,000 atoms
+
+[ molecules ]
+SOL 31720

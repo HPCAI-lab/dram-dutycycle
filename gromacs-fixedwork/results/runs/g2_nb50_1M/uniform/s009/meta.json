@@ -1,0 +1,29 @@
+{
+ "window": "g2_nb50_1M",
+ "arrival": "uniform",
+ "stride": 9,
+ "records": 1000000,
+ "trace_sha256": "39e5b275643729f94a2136a2ea72da1d9900cb60cc1a1f7af1c9ed140d2f94d8",
+ "sim_sha256": "3bb99b877b6d53aa229b619048e5b60069c0873750a1bcc46fd4a7e7754f662d",
+ "cmd": [
+  "build/bin/dramsim3main",
+  "build/DRAMsim3/configs/DDR4_8Gb_x8_3200.ini",
+  "-c",
+  "370000000",
+  "-f",
+  "-t",
+  "results/runs/g2_nb50_1M/uniform/s009/trace.txt",
+  "-o",
+  "results/runs/g2_nb50_1M/uniform/s009"
+ ],
+ "converter": [
+  "awk",
+  "-f",
+  "conversion/convert_pin_to_dramsim.awk",
+  "-v",
+  "stride=9",
+  "data/windows/g2_nb50_1M.pin"
+ ],
+ "returncode": 0,
+ "stderr_tail": ""
+}

@@ -1,0 +1,28 @@
+{
+ "window": "g4_spread",
+ "arrival": "poisson",
+ "stride": 50,
+ "records": 100000,
+ "trace_sha256": "ee29f1ae3bad59ecf597867a037753dc69a2df33a7156f7b29027d4169c0d324",
+ "sim_sha256": "3bb99b877b6d53aa229b619048e5b60069c0873750a1bcc46fd4a7e7754f662d",
+ "cmd": [
+  "build/bin/dramsim3main",
+  "build/DRAMsim3/configs/DDR4_8Gb_x8_3200.ini",
+  "-c",
+  "210000000",
+  "-f",
+  "-t",
+  "results/runs/g4_spread/poisson/s050/trace.txt",
+  "-o",
+  "results/runs/g4_spread/poisson/s050"
+ ],
+ "converter": [
+  "python3",
+  "conversion/convert_poisson.py",
+  "data/windows/g4_spread.pin",
+  "50",
+  "14050"
+ ],
+ "returncode": 0,
+ "stderr_tail": ""
+}

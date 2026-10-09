@@ -1,0 +1,28 @@
+{
+ "window": "g3_nb75",
+ "arrival": "poisson",
+ "stride": 12,
+ "records": 100000,
+ "trace_sha256": "786981322c8387e706a57122f514ae3daf3c5e0f1fcc93d000fb0f32e5910faf",
+ "sim_sha256": "3bb99b877b6d53aa229b619048e5b60069c0873750a1bcc46fd4a7e7754f662d",
+ "cmd": [
+  "build/bin/dramsim3main",
+  "build/DRAMsim3/configs/DDR4_8Gb_x8_3200.ini",
+  "-c",
+  "58000000",
+  "-f",
+  "-t",
+  "results/runs/g3_nb75/poisson/s012/trace.txt",
+  "-o",
+  "results/runs/g3_nb75/poisson/s012"
+ ],
+ "converter": [
+  "python3",
+  "conversion/convert_poisson.py",
+  "data/windows/g3_nb75.pin",
+  "12",
+  "13012"
+ ],
+ "returncode": 0,
+ "stderr_tail": ""
+}

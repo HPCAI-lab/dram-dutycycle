@@ -1,0 +1,28 @@
+{
+ "window": "g5_fft",
+ "arrival": "poisson",
+ "stride": 12,
+ "records": 100000,
+ "trace_sha256": "3a1e338dd541e778f5814ffe2e92c8fab6a0c472cde8016e63c57bbbbfecb40a",
+ "sim_sha256": "3bb99b877b6d53aa229b619048e5b60069c0873750a1bcc46fd4a7e7754f662d",
+ "cmd": [
+  "build/bin/dramsim3main",
+  "build/DRAMsim3/configs/DDR4_8Gb_x8_3200.ini",
+  "-c",
+  "58000000",
+  "-f",
+  "-t",
+  "results/runs/g5_fft/poisson/s012/trace.txt",
+  "-o",
+  "results/runs/g5_fft/poisson/s012"
+ ],
+ "converter": [
+  "python3",
+  "conversion/convert_poisson.py",
+  "data/windows/g5_fft.pin",
+  "12",
+  "15012"
+ ],
+ "returncode": 0,
+ "stderr_tail": ""
+}

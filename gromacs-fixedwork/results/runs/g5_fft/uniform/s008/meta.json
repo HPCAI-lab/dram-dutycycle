@@ -1,0 +1,29 @@
+{
+ "window": "g5_fft",
+ "arrival": "uniform",
+ "stride": 8,
+ "records": 100000,
+ "trace_sha256": "4e4d7e58b57c6daaf11d8883eb22246ef3e55edb43474a3bae7c342a74a03728",
+ "sim_sha256": "3bb99b877b6d53aa229b619048e5b60069c0873750a1bcc46fd4a7e7754f662d",
+ "cmd": [
+  "build/bin/dramsim3main",
+  "build/DRAMsim3/configs/DDR4_8Gb_x8_3200.ini",
+  "-c",
+  "42000000",
+  "-f",
+  "-t",
+  "results/runs/g5_fft/uniform/s008/trace.txt",
+  "-o",
+  "results/runs/g5_fft/uniform/s008"
+ ],
+ "converter": [
+  "awk",
+  "-f",
+  "conversion/convert_pin_to_dramsim.awk",
+  "-v",
+  "stride=8",
+  "data/windows/g5_fft.pin"
+ ],
+ "returncode": 0,
+ "stderr_tail": ""
+}

@@ -1,0 +1,1 @@
+Per-command normalization: results/summary.json and results/idle_criterion.json were regenerated with DUTYCYCLE_UNIT=command using analysis/repo_changes/*.py (read_run.py gains the DUTYCYCLE_UNIT option; idle_criterion.py uses N = units). For GEMM-AI the per-command outputs equal the stored per-request outputs exactly.
